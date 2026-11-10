@@ -96,5 +96,5 @@ if __name__ == "__main__":
         ax.set_ylabel(r"$E / E_{\max}$")
     fig.suptitle("Монте-Карло (ДОЗА): энерговыделение по z (оцифровка, нормировка на максимум)")
     fig.tight_layout()
-    fig.savefig("photoes/mc_digitized.png", dpi=150)
+    fig.savefig("data/mc/mc_digitized.png", dpi=150)
     plt.close(fig)

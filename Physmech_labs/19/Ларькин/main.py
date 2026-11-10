@@ -17,6 +17,7 @@
 """
 import csv
 import glob
+import io
 import os
 import numpy as np
 import matplotlib.pyplot as plt
@@ -24,8 +25,21 @@ from matplotlib.patches import Rectangle
 from PIL import Image
 from scipy.ndimage import uniform_filter1d
 
-OUT = "photoes/"
+OUT = "photoes/"               # картинки, которые идут в отчёт (здесь — красный канал)
+# Профили, карты и кропы в отчёте — итоговые из data/00_media_final/
+# (sync_media.py), числа к ним — digitize_final.py. Свои версии main.py
+# пишет отдельно, чтобы не затирать итоговые.
+OUT_RAW = "data/main_py_out/"
 os.makedirs(OUT, exist_ok=True)
+os.makedirs(OUT_RAW, exist_ok=True)
+
+
+def save_rgb(fig, path, dpi):
+    """savefig без альфа-канала: такие PNG pdfLaTeX вставляет в ~10 раз быстрее."""
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png", dpi=dpi, facecolor="white")
+    buf.seek(0)
+    Image.open(buf).convert("RGB").save(path, optimize=True)
 
 CHANNEL = "green"
 CH = {"red": 0, "green": 1, "blue": 2}[CHANNEL]
@@ -112,7 +126,7 @@ def _t2_tag(series):
 
 
 def write_csv(name, header, rows):
-    with open("data/" + name, "w", newline="", encoding="utf-8") as f:
+    with open(OUT_RAW + name, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(header)
         w.writerows(rows)
@@ -168,7 +182,7 @@ def crop_t1(gas, p, path):
     ax.set_title(f"{gas}: область обрезки ({p:g} торр)")
     fig.colorbar(im, ax=ax, label="Интенсивность, у.е.", shrink=0.7)
     fig.tight_layout()
-    fig.savefig(OUT + f"t1_crop_{_t1_tag(gas)}_{_p_tag(p)}.png", dpi=150)
+    save_rgb(fig, OUT_RAW + f"t1_crop_{_t1_tag(gas)}_{_p_tag(p)}.png", dpi=150)
     plt.close(fig)
 
 
@@ -187,7 +201,7 @@ def heatmap_t1(gas, p, path):
     ax.set_title(f"{gas}: heatmap ({p:g} торр)")
     fig.colorbar(im, ax=ax, label=r"$B / B_{\mathrm{max}}$", shrink=0.9)
     fig.tight_layout()
-    fig.savefig(OUT + f"t1_heatmap_{_t1_tag(gas)}_{_p_tag(p)}.png", dpi=150)
+    save_rgb(fig, OUT_RAW + f"t1_heatmap_{_t1_tag(gas)}_{_p_tag(p)}.png", dpi=150)
     plt.close(fig)
 
 
@@ -250,7 +264,7 @@ def run_task1():
         ax.grid(alpha=0.3)
         ax.legend()
         fig.tight_layout()
-        fig.savefig(OUT + f"t1_profile_{tag}.png", dpi=170)
+        save_rgb(fig, OUT_RAW + f"t1_profile_{tag}.png", dpi=170)
         plt.close(fig)
     write_csv("peaks_t1.csv",
               ["gas", "p_torr", "z_max_cm", "dz_cm", "B0_rel", "R_e_m", "z_max_mc_cm"],
@@ -276,7 +290,7 @@ def plot_zmax(peaks):
     ax.grid(alpha=0.3)
     ax.legend(fontsize=9)
     fig.tight_layout()
-    fig.savefig(OUT + "t1_zmax.png", dpi=170)
+    save_rgb(fig, OUT_RAW + "t1_zmax.png", dpi=170)
     plt.close(fig)
 
 
@@ -303,7 +317,7 @@ def crop_t2(series, p, path):
     ax.set_title(f"{series}: область для I(L) ({p:g} торр)")
     fig.colorbar(im, ax=ax, label="Интенсивность, у.е.", shrink=0.7)
     fig.tight_layout()
-    fig.savefig(OUT + f"t2_crop_{_t2_tag(series)}_{_p_tag(p)}.png", dpi=150)
+    save_rgb(fig, OUT_RAW + f"t2_crop_{_t2_tag(series)}_{_p_tag(p)}.png", dpi=150)
     plt.close(fig)
 
 
@@ -323,7 +337,7 @@ def heatmap_t2(series, p, path):
     ax.set_title(f"{series}: heatmap ({p:g} торр)")
     fig.colorbar(im, ax=ax, label=r"$I / I_{\mathrm{max}}$", shrink=0.9)
     fig.tight_layout()
-    fig.savefig(OUT + f"t2_heatmap_{_t2_tag(series)}_{_p_tag(p)}.png", dpi=150)
+    save_rgb(fig, OUT_RAW + f"t2_heatmap_{_t2_tag(series)}_{_p_tag(p)}.png", dpi=150)
     plt.close(fig)
 
 
@@ -359,7 +373,7 @@ def run_task2():
         ax.grid(alpha=0.3)
         ax.legend()
         fig.tight_layout()
-        fig.savefig(OUT + f"t2_profile_{_t2_tag(series)}.png", dpi=170)
+        save_rgb(fig, OUT_RAW + f"t2_profile_{_t2_tag(series)}.png", dpi=170)
         plt.close(fig)
     write_csv("peaks_t2.csv",
               ["series", "p_torr", "d_top_mm", "d_bottom_mm", "I_center_rel", "pL_torr_cm"],
@@ -411,11 +425,11 @@ def run_task2_red():
         axs[0, 0].legend()
         fig.suptitle(f"ВЧЕ-разряд, {series}: красный (R) и зелёный (G) каналы")
         fig.tight_layout()
-        fig.savefig(OUT + f"t2_profile_red_{_t2_tag(series)}.png", dpi=170)
+        save_rgb(fig, OUT + f"t2_profile_red_{_t2_tag(series)}.png", dpi=170)
         plt.close(fig)
 
 if __name__ == "__main__":
     run_task1()
     run_task2()
     run_task2_red()
-    print(f"\nГотово → {OUT}")
+    print(f"\nГотово → {OUT} (красный канал), {OUT_RAW} (остальное)")

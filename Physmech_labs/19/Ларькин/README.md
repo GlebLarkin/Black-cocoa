@@ -2,12 +2,14 @@
 
 - `main.tex` → `main.pdf` — отчёт (обе части + ответы на вопросы преподавателя)
 - `presentation/` — презентация для защиты (`presentation.tex` + `figs/`, самодостаточная папка; собирать `pdflatex presentation.tex` дважды)
-- `main.py` — обработка фотографий (B(z), I(L)), результаты в `photoes/`, таблицы в `data/peaks_t*.csv`
+- `data/00_media_final/` — **итоговые картинки** для отчёта (профили, карты, кропы, МК, спектры, прозрачность). `sync_media.py` копирует их в `photoes/` под именами из `main.tex` и убирает альфа-канал (с альфой pdfLaTeX собирает отчёт ≈6,5 с на проход — бесплатный Overleaf не успевает; без альфы ≈0,8 с). `python3 sync_media.py --flatten DIR` — убрать альфу у всех PNG в папке
+- `digitize_final.py` — снимает числа с итоговых профилей (z_max по штриховой линии, Δz, B(0); слои и центр I(L)) → `data/peaks_t1.csv`, `data/peaks_t2.csv`, график `photoes/t1_zmax.png`; контроль оцифровки — `data/final_digitized/`
+- `main.py` — исходная обработка фотографий (B(z), I(L)); в отчёт идут только профили красного канала (`photoes/t2_profile_red_*`), остальное пишется в `data/main_py_out/` (не в git)
 - `data/raw_task1/` — фото ЭПП (N₂, Ar при 1; 2,5; 5 Торр), `data/raw_task2/` — фото ВЧЕ (He чистый / технический)
-- `data/monte_carlo/<n2|ar>_<P>[_<θ0>].png` — графики ДОЗА (P без запятой: 25 = 2,5 Торр; θ0 = 3,5°, у `ar_25_7` — 7°); `digitize_mc.py` оцифровывает их в `data/mc/digitized/<N2|Ar>_<P>torr.csv` (`z_cm,E`) и `photoes/mc_digitized.png`; `main.py` накладывает их на B(z)
+- `data/monte_carlo/<n2|ar>_<P>[_<θ0>].png` — графики ДОЗА (P без запятой: 25 = 2,5 Торр; θ0 = 3,5°, у `ar_25_7` — 7°; 4000–10000 траекторий; z max из заголовков — в табл. 2 отчёта); `digitize_mc.py` оцифровывает их в `data/mc/digitized/<N2|Ar>_<P>torr.csv` (`z_cm,E`) и `data/mc/mc_digitized.png`
 - `data/raw_monte-carlo/` — черновые снимки тех же графиков (не используются)
 - `data/wavelength/` — обработанные спектры разряда (без лампы); `data/gal/` — спектры галогенной лампы (2,5 / 3 / 4 с)
-- `data/csv1/` — проверка прозрачности: (разряд + лампа − лампа) против разряда для 4 режимов; копии — `photoes/transp_*.png`
+- `data/csv1/` — проверка прозрачности: (разряд + лампа − лампа) против разряда; все 6 режимов — в `data/00_media_final/4_2_discharge_lamp/`, копии — `photoes/transp_*.png`
 - `data/raw_spectors/` — снимки экрана AvaSoft: `*_wo` — только разряд, без суффикса — разряд + галогенная лампа, `gal*` — только лампа
 - `data/spector_method` — рисунок-идентификатор пиков (Turicek et al., Appl. Sci. 2021, 11, 1703); копии всех спектров для отчёта — `photoes/spec_*.png`
 - `notes.pdf` — рукописные заметки (расшифровка ниже)
