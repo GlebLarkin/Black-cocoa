@@ -14,6 +14,7 @@ PHOTO = os.path.join(HERE, "photoes")
 DATA = os.path.join(HERE, "data")
 
 KGF_CM2 = 98066.5                       # Па
+DIV = 1.6 / 200 * KGF_CM2               # 1 деление = 0,008 кгс/см^2 = 784,5 Па
 MMHG = 133.322                          # Па
 RHO_W, G = 997.5, 9.80665               # вода (~24 °C), g
 CM_H2O = RHO_W * G * 1e-2               # 1 см вод. ст. = 97,8 Па
@@ -135,9 +136,9 @@ def digitize_photo():
     return (xy[:, :2] / xy[:, 2:]).T
 
 
-def process(n, h, temperature, curve, divisions=200):
+def process(n, h, temperature, curve):
     cp = co2(temperature)
-    p0 = P_ATM + np.asarray(n) * (1.6 * KGF_CM2 / divisions)
+    p0 = P_ATM + np.asarray(n) * DIV
     dp = np.asarray(h) * CM_H2O
     x = 1 - (P_ATM / p0) ** (cp["R"] / cp["cp"])
     velocity = np.sqrt(2 * cp["cp"] * temperature * x)
@@ -193,24 +194,6 @@ def main():
                          "dT_over_T0", "dSmax_J_kgK", "S_bar", "V1_m_s", "tau_h_us",
                          "tau_VT_over_tau_h", "tau_VT_us", "tau_reference_us"])
         writer.writerows(rows)
-
-    with open(os.path.join(DATA, "manometer_scale_check.csv"), "w", newline="") as output:
-        writer = csv.writer(output, lineterminator="\n")
-        writer.writerow(["full_scale_divisions", "T_C", "n_div", "p0_bar",
-                         "S_bar", "tau_VT_us", "tau_reference_us"])
-        for divisions in (200, 100):
-            for series in SERIES.values():
-                temperature = series["T0"]
-                p0, _, _, _, _, fraction, _, stop_time, ratio = process(
-                    series["n"], series["h"], temperature, curve, divisions
-                )
-                reference = tau_lit(p0, temperature)
-                for n, p, sb, tau, ref in zip(
-                    series["n"], p0, fraction, stop_time * ratio * 1e6, reference
-                ):
-                    writer.writerow([divisions, f"{temperature - 273.15:g}", n,
-                                     f"{p / 1e5:.4f}", f"{sb:.4f}",
-                                     f"{tau:.3f}" if np.isfinite(tau) else "", f"{ref:.3f}"])
 
 
 if __name__ == "__main__":
